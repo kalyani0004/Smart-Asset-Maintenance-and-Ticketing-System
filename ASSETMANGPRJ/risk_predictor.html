@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ML Risk Predictor - AssetFlow</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="https://unpkg.com/react@18/umd/react.development.js" crossorigin></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js" crossorigin></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <script src="https://unpkg.com/feather-icons"></script>
+    <style>
+        .grid-2 { display: grid; grid-template-columns: repeat(2, 1fr); gap: 1.5rem; }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+
+    <script type="text/babel">
+        function Sidebar() {
+            return (
+                <div className="sidebar" style={{height: '100vh'}}>
+                    <div className="logo" style={{marginBottom: '2rem'}}>
+                        <span className="logo-icon">W</span> WRENCH
+                    </div>
+                    <ul style={{listStyle: 'none'}}>
+                        <li style={{marginBottom: '1rem'}}><a href="pmo.html" style={{textDecoration: 'none', color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: '0.5rem'}}><i data-feather="pie-chart"></i> PMO Reports</a></li>
+                        <li style={{marginBottom: '1rem'}}><a href="risk_predictor.html" style={{textDecoration: 'none', color: 'var(--teal-primary)', fontWeight: '600', display: 'flex', alignItems: 'center', gap: '0.5rem'}}><i data-feather="cpu"></i> ML Predictor</a></li>
+                        <li style={{marginTop: '2rem', borderTop: '1px solid var(--border-color)', paddingTop: '1rem'}}><a href="login.html" style={{textDecoration: 'none', color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: '0.5rem'}}><i data-feather="log-out"></i> Logout</a></li>
+                    </ul>
+                </div>
+            );
+        }
+
+        function MLPredictor() {
+            const [assets, setAssets] = React.useState([]);
+            const [selectedAsset, setSelectedAsset] = React.useState("");
+            
+            // Form state
+            const [age, setAge] = React.useState(0);
+            const [breakdowns, setBreakdowns] = React.useState(0);
+            const [cost, setCost] = React.useState(0);
+            const [downtime, setDowntime] = React.useState(0);
+            
+            const [loading, setLoading] = React.useState(false);
+            const [result, setResult] = React.useState(null);
+            const [ticketLoading, setTicketLoading] = React.useState(false);
+
+            React.useEffect(() => {
+                fetch('api/assets.php')
+                    .then(r => r.json())
+                    .then(d => { if(d.status === 'success') setAssets(d.data); });
+            }, []);
+
+            React.useEffect(() => { feather.replace(); });
+
+            const handleAssetSelect = (e) => {
+                const id = e.target.value;
+                setSelectedAsset(id);
+                if (id) {
+                    const ast = assets.find(a => a.id == id);
+                    if (ast) {
+                        setAge(ast.age);
+                        setBreakdowns(ast.breakdown_count);
+                        setCost(ast.repair_cost);
+                        setDowntime(ast.age * 2); // heuristic default
+                    }
+                }
+            };
+
+            const runPrediction = async (e) => {
+                e.preventDefault();
+                setLoading(true);
+                setResult(null);
+
+                try {
+                    const res = await fetch('api/run_model.php', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ age, breakdown_count: breakdowns, repair_cost: cost, downtime_hours: downtime })
+                    });
+                    
+                    const data = await res.json();
+                    if (data.status === 'success') {
+                        setResult(data);
+                    } else {
+                        alert("Error: " + data.message);
+                    }
+                } catch(err) {
+                    alert("Network Error running model");
+                } finally {
+                    setLoading(false);
+                }
+            };
+
+            const autoDispatchTicket = async () => {
+                if (!selectedAsset) return;
+                setTicketLoading(true);
+                try {
+                    await fetch('api/tickets.php', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ 
+                            asset_id: selectedAsset,
+                            description: `[AUTO-DISPATCH] ML Predicted ${result.prediction} Risk. Age: ${age}, Breakdowns: ${breakdowns}`,
+                            priority: result.prediction === 'High' ? 'High' : 'Normal'
+                        })
+                    });
+                    alert("Preventative Maintenance Ticket successfully dispatched!");
+                } catch (e) {
+                    alert("Failed to dispatch ticket");
+                } finally {
+                    setTicketLoading(false);
+                }
+            };
+
+            return (
+                <div className="dash-layout">
+                    <Sidebar />
+                    
+                    <div className="main-content" style={{padding: '2rem'}}>
+                        <h1 style={{fontSize: '1.75rem', fontWeight: 'bold', marginBottom: '0.5rem'}}>AI Asset Risk Predictor</h1>
+                        <p style={{color: 'var(--text-muted)', marginBottom: '2rem'}}>Utilizing Random Forest Classifier to predict failure probabilities based on historical maintenance datasets.</p>
+
+                        <div className="grid-2">
+                            <div className="card">
+                                <h3 style={{marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem'}}><i data-feather="sliders"></i> Input Parameters</h3>
+                                
+                                <form onSubmit={runPrediction}>
+                                    <div className="form-group">
+                                        <label className="form-label">Select Registered Asset</label>
+                                        <select className="form-select" value={selectedAsset} onChange={handleAssetSelect} required>
+                                            <option value="">-- Select an Asset --</option>
+                                            {assets.map(a => <option key={a.id} value={a.id}>{a.name} (ID: {a.id})</option>)}
+                                        </select>
+                                    </div>
+
+                                    <div className="grid-2" style={{marginBottom: '1rem'}}>
+                                        <div className="form-group">
+                                            <label className="form-label">Age (Years)</label>
+                                            <input type="number" className="form-input" value={age} onChange={e=>setAge(e.target.value)} required disabled={!selectedAsset} min="0" />
+                                        </div>
+                                        <div className="form-group">
+                                            <label className="form-label">Breakdown Count</label>
+                                            <input type="number" className="form-input" value={breakdowns} onChange={e=>setBreakdowns(e.target.value)} required disabled={!selectedAsset} min="0" />
+                                        </div>
+                                    </div>
+                                    
+                                    <div className="grid-2" style={{marginBottom: '1.5rem'}}>
+                                        <div className="form-group">
+                                            <label className="form-label">Repair Cost (₹)</label>
+                                            <input type="number" className="form-input" value={cost} onChange={e=>setCost(e.target.value)} required disabled={!selectedAsset} min="0" />
+                                        </div>
+                                        <div className="form-group">
+                                            <label className="form-label">Estimated Downtime (hrs)</label>
+                                            <input type="number" className="form-input" value={downtime} onChange={e=>setDowntime(e.target.value)} required disabled={!selectedAsset} min="0" />
+                                        </div>
+                                    </div>
+
+                                    <button type="submit" className="btn btn-primary btn-full" disabled={loading || !selectedAsset}>
+                                        {loading ? 'Running Random Forest Model...' : 'Analyze Risk Probability'}
+                                    </button>
+                                </form>
+                            </div>
+
+                            <div className="card" style={{display: 'flex', flexDirection: 'column'}}>
+                                <h3 style={{marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem'}}><i data-feather="activity"></i> Analysis Results</h3>
+                                
+                                {!result && !loading && (
+                                    <div style={{flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-muted)', border: '2px dashed var(--border-color)', borderRadius: '8px'}}>
+                                        Run prediction to view risk assessment
+                                    </div>
+                                )}
+                                
+                                {loading && (
+                                    <div style={{flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center'}}>
+                                        <div style={{width: '40px', height: '40px', border: '4px solid #f3f3f3', borderTop: '4px solid var(--teal-primary)', borderRadius: '50%', animation: 'spin 1s linear infinite'}}></div>
+                                        <style>{`@keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }`}</style>
+                                    </div>
+                                )}
+
+                                {result && (
+                                    <div>
+                                        <div style={{
+                                            textAlign: 'center', padding: '2rem', borderRadius: '8px', marginBottom: '1.5rem',
+                                            background: result.prediction === 'High' ? '#fef2f2' : (result.prediction === 'Medium' ? '#fffbeb' : '#f0fdf4'),
+                                            border: `2px solid ${result.prediction === 'High' ? '#ef4444' : (result.prediction === 'Medium' ? '#f59e0b' : '#10b981')}`
+                                        }}>
+                                            <h2 style={{fontSize: '2.5rem', fontWeight: 'bold', color: result.prediction === 'High' ? '#ef4444' : (result.prediction === 'Medium' ? '#d97706' : '#166534')}}>
+                                                {result.prediction.toUpperCase()} RISK
+                                            </h2>
+                                            <p style={{marginTop: '0.5rem', color: 'var(--text-muted)'}}>Predicted Maintenance Threat Level</p>
+                                        </div>
+
+                                        <h4 style={{marginBottom: '0.5rem'}}>Probability Confidence</h4>
+                                        <div style={{display: 'flex', flexDirection: 'column', gap: '0.75rem', marginBottom: '2rem'}}>
+                                            {Object.entries(result.probabilities).map(([clf, prob]) => {
+                                                const pct = (prob * 100).toFixed(1);
+                                                return (
+                                                    <div key={clf}>
+                                                        <div className="flex justify-between" style={{fontSize: '0.875rem', marginBottom: '0.25rem'}}>
+                                                            <span>{clf}</span> <span>{pct}%</span>
+                                                        </div>
+                                                        <div style={{width: '100%', height: '8px', background: '#e2e8f0', borderRadius: '4px'}}>
+                                                            <div style={{
+                                                                width: `${pct}%`, height: '100%', borderRadius: '4px',
+                                                                background: clf === 'High' ? '#ef4444' : (clf === 'Medium' ? '#f59e0b' : '#10b981')
+                                                            }}></div>
+                                                        </div>
+                                                    </div>
+                                                )
+                                            })}
+                                        </div>
+
+                                        {(result.prediction === 'High' || result.prediction === 'Medium') && (
+                                            <button 
+                                                className="btn btn-primary btn-full" 
+                                                onClick={autoDispatchTicket}
+                                                disabled={ticketLoading}
+                                                style={{background: '#ef4444', borderColor: '#ef4444'}}
+                                            >
+                                                {ticketLoading ? 'Dispatching...' : 'Auto-Dispatch Preventative Ticket'}
+                                            </button>
+                                        )}
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            );
+        }
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<MLPredictor />);
+    </script>
+</body>
+</html>

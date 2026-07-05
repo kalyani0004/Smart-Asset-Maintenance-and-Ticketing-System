@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AssetFlow - Predict. Prevent.</title>
+    <link rel="stylesheet" href="style.css">
+    
+    <!-- React & Babel CDNs -->
+    <script src="https://unpkg.com/react@18/umd/react.development.js" crossorigin></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js" crossorigin></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    
+    <!-- Feather Icons for lightweight SVGs -->
+    <script src="https://unpkg.com/feather-icons"></script>
+</head>
+<body>
+    <div id="root"></div>
+
+    <script type="text/babel">
+        function LandingPage() {
+            return (
+                <div style={{minHeight: '100vh', display: 'flex', flexDirection: 'column'}}>
+                    <nav className="navbar">
+                        <div className="logo">
+                            <span className="logo-icon">W</span> WRENCH SOLUTIONS
+                        </div>
+                        <div className="flex gap-4">
+                            <a href="about.html" className="btn btn-outline">About Us</a>
+                            <a href="login.html" className="btn btn-outline">Login</a>
+                        </div>
+                    </nav>
+
+                    <main style={{flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'space-between', maxWidth: '1200px', margin: '0 auto', gap: '4rem', padding: '2rem'}}>
+                        <div style={{flex: 1, textAlign: 'left'}}>
+                            <div style={{display: 'inline-block', padding: '0.4rem 1rem', background: 'rgba(20,184,166,0.1)', color: 'var(--teal-primary)', borderRadius: '50px', fontWeight: 'bold', fontSize: '0.9rem', marginBottom: '1.5rem', border: '1px solid rgba(20,184,166,0.3)'}}>
+                                <i data-feather="cpu" style={{width: '14px', verticalAlign: 'middle', marginRight: '6px'}}></i> AI-Powered Predictive Maintenance
+                            </div>
+                            <h1 style={{fontSize: '4.5rem', fontWeight: '800', lineHeight: '1.1', marginBottom: '1.5rem'}}>
+                                <span style={{color: '#0f172a'}}>WRENCH</span><br/>
+                                <span style={{color: 'var(--teal-primary)'}}>SOLUTIONS</span>
+                            </h1>
+                            <p style={{fontSize: '1.25rem', color: 'var(--text-muted)', marginBottom: '2.5rem', lineHeight: '1.6'}}>
+                                Next-generation project registry, asset monitoring, and predictive maintenance platform for global infrastructure.
+                            </p>
+                            <div className="flex gap-4">
+                                <a href="login.html" className="btn btn-primary" style={{
+                                    padding: '1.1rem 2.2rem', fontSize: '1.125rem', display: 'flex', alignItems: 'center', gap: '0.5rem', boxShadow: '0 10px 25px rgba(20,184,166,0.4)', borderRadius: '50px'
+                                }}><i data-feather="log-in"></i> Enterprise Login</a>
+                                <a href="demo.html" className="btn btn-outline" style={{
+                                    padding: '1.1rem 2.2rem', fontSize: '1.125rem', display: 'flex', alignItems: 'center', gap: '0.5rem', borderRadius: '50px'
+                                }}><i data-feather="bar-chart-2"></i> View Demo</a>
+                            </div>
+                        </div>
+                        <div style={{flex: 1, position: 'relative'}}>
+                            <div style={{
+                                position: 'absolute', top: '20px', left: '-20px', width: '100%', height: '100%',
+                                background: 'linear-gradient(135deg, var(--teal-primary), transparent)',
+                                borderRadius: '20px', zIndex: 0, opacity: 0.2, filter: 'blur(30px)'
+                            }}></div>
+                            <img src="images/hero.png" alt="Asset Management Analytics" style={{
+                                width: '100%', borderRadius: '20px', boxShadow: '0 25px 50px -12px rgba(0,0,0,0.5)', 
+                                position: 'relative', zIndex: 1, border: '1px solid rgba(0,0,0,0.1)'
+                            }} />
+                        </div>
+                    </main>
+                </div>
+            );
+        }
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<LandingPage />);
+        
+        // Initialize Feather Icons after mount
+        setTimeout(() => feather.replace(), 100);
+    </script>
+</body>
+</html>

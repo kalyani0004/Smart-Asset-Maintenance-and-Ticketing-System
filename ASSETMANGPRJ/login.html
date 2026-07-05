@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - Wrench Solutions</title>
+    <link rel="stylesheet" href="style.css">
+    
+    <!-- React & Babel CDNs -->
+    <script src="https://unpkg.com/react@18/umd/react.development.js" crossorigin></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js" crossorigin></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <script src="https://unpkg.com/feather-icons"></script>
+    
+    <style>
+        .login-wrapper {
+            background-color: #f1f5f9;
+            background-image: radial-gradient(#cbd5e1 1px, transparent 1px);
+            background-size: 20px 20px;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .login-card {
+            width: 100%;
+            max-width: 440px;
+            margin: 2rem;
+        }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+
+    <script type="text/babel">
+        function LoginPage() {
+            const [role, setRole] = React.useState("Admin");
+            const [email, setEmail] = React.useState("");
+            const [password, setPassword] = React.useState("");
+            const [errorMsg, setErrorMsg] = React.useState("");
+            const [loading, setLoading] = React.useState(false);
+            
+            const handleLogin = async (e) => {
+                e.preventDefault();
+                setLoading(true);
+                setErrorMsg("");
+                
+                try {
+                    const res = await fetch('api/login.php', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ email, password, role })
+                    });
+                    
+                    const data = await res.json();
+                    
+                    if (data.status === 'success') {
+                        // Store user session (skip for simple coding, just redirect)
+                        if (role === 'Admin') window.location.href = 'admin.html';
+                        else if (role === 'PMO') window.location.href = 'pmo.html';
+                        else if (role === 'Technician') window.location.href = 'technician.html';
+                    } else {
+                        setErrorMsg(data.message || "Login failed");
+                    }
+                } catch (error) {
+                    setErrorMsg("Network error connecting to API.");
+                } finally {
+                    setLoading(false);
+                }
+            };
+
+            return (
+                <div className="login-wrapper">
+                    <div className="card login-card">
+                        <div style={{textAlign: 'center', marginBottom: '2.5rem'}}>
+                            <div style={{
+                                width: '50px', height: '50px', 
+                                backgroundColor: 'var(--teal-primary)', borderRadius: '12px',
+                                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                margin: '0 auto 1.5rem', color: 'white'
+                            }}>
+                                <i data-feather="tool"></i>
+                            </div>
+                            <h2 style={{fontSize: '1.75rem', fontWeight: '700'}}>Welcome Back</h2>
+                            <p style={{color: 'var(--text-muted)', marginTop: '0.5rem'}}>Sign in to Wrench Solutions</p>
+                        </div>
+
+                        {errorMsg && (
+                            <div style={{color: 'white', backgroundColor: '#ef4444', padding: '0.75rem', borderRadius: '6px', marginBottom: '1rem', textAlign: 'center', fontSize: '0.875rem'}}>
+                                {errorMsg}
+                            </div>
+                        )}
+
+                        <form onSubmit={handleLogin}>
+                            <div className="form-group">
+                                <label className="form-label">Email Address</label>
+                                <input type="email" className="form-input" placeholder="you@example.com" value={email} onChange={e => setEmail(e.target.value)} required />
+                            </div>
+                            <div className="form-group">
+                                <label className="form-label">Password</label>
+                                <input type="password" className="form-input" placeholder="••••••••" value={password} onChange={e => setPassword(e.target.value)} required />
+                            </div>
+                            <div className="form-group" style={{marginBottom: '2rem'}}>
+                                <label className="form-label">Sign in as</label>
+                                <select 
+                                    className="form-select" 
+                                    value={role} 
+                                    onChange={(e) => setRole(e.target.value)}
+                                >
+                                    <option value="Admin">Administrator</option>
+                                    <option value="PMO">PMO Hub</option>
+                                    <option value="Technician">Technician Portal</option>
+                                </select>
+                            </div>
+                            
+                            <button type="submit" disabled={loading} className="btn btn-primary btn-full" style={{fontSize: '1.125rem', padding: '1rem', opacity: loading ? 0.7 : 1}}>
+                                {loading ? 'Checking...' : 'Sign In'}
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            );
+        }
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<LoginPage />);
+        
+        setTimeout(() => feather.replace(), 100);
+    </script>
+</body>
+</html>

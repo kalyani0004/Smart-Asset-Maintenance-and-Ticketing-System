@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AssetFlow Advanced Dashboard</title>
+
+<script src="https://unpkg.com/react@18/umd/react.development.js"></script>
+<script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+<script src="https://unpkg.com/babel-standalone@6/babel.min.js"></script>
+
+<style>
+body {
+  margin: 0;
+  font-family: 'Segoe UI', sans-serif;
+  background: #eef3f2;
+}
+
+/* Layout */
+.app {
+  display: flex;
+}
+
+/* Sidebar */
+.sidebar {
+  width: 240px;
+  background: #1f3d3a;
+  color: white;
+  height: 100vh;
+  padding: 20px;
+}
+
+.sidebar h2 {
+  margin-bottom: 30px;
+}
+
+.sidebar div {
+  margin: 15px 0;
+  cursor: pointer;
+}
+
+/* Main */
+.main {
+  flex: 1;
+}
+
+/* Navbar */
+.navbar {
+  background: white;
+  padding: 15px 25px;
+  display: flex;
+  justify-content: space-between;
+  border-bottom: 1px solid #ddd;
+}
+
+.btn {
+  background: #4f9c8a;
+  color: white;
+  border: none;
+  padding: 8px 14px;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+/* Grid */
+.grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 15px;
+  padding: 20px;
+}
+
+/* Cards */
+.card {
+  background: white;
+  padding: 18px;
+  border-radius: 14px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+}
+
+.value {
+  font-size: 26px;
+  font-weight: bold;
+}
+
+/* Table */
+.table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.table th, .table td {
+  padding: 10px;
+  border-bottom: 1px solid #eee;
+}
+
+/* Risk */
+.high { color: red; }
+.medium { color: orange; }
+.low { color: green; }
+
+/* Activity */
+.activity {
+  max-height: 200px;
+  overflow-y: auto;
+}
+</style>
+</head>
+
+<body>
+
+<div id="root"></div>
+
+<script type="text/babel">
+
+function App() {
+
+  const [role, setRole] = React.useState("Admin");
+
+  const assets = [
+    {name:"Excavator", age:6, downtime:25, cost:60000},
+    {name:"Generator", age:9, downtime:40, cost:90000},
+    {name:"Forklift", age:3, downtime:12, cost:25000},
+    {name:"Crane", age:12, downtime:60, cost:120000}
+  ];
+
+  function risk(a,d,c){
+    let score = a*2 + d*1.5 + c/10000;
+    if(score>50) return "High";
+    if(score>25) return "Medium";
+    return "Low";
+  }
+
+  return (
+    <div className="app">
+
+      {/* Sidebar */}
+      <div className="sidebar">
+        <h2>Wrench</h2>
+        <div onClick={()=>setRole("Admin")}>Admin Dashboard</div>
+        <div onClick={()=>setRole("Technician")}>Technician Panel</div>
+        <div onClick={()=>setRole("PMO")}>PMO Analytics</div>
+      </div>
+
+      {/* Main */}
+      <div className="main">
+
+        {/* Navbar */}
+        <div className="navbar">
+          <h3>{role} View</h3>
+          <button className="btn" onClick={()=>window.location.href="index.html"}>
+            Back
+          </button>
+        </div>
+
+        {/* KPI */}
+        <div className="grid">
+          <div className="card">
+            <div>Total Projects</div>
+            <div className="value">18</div>
+          </div>
+
+          <div className="card">
+            <div>Total Assets</div>
+            <div className="value">210</div>
+          </div>
+
+          <div className="card">
+            <div>Tickets</div>
+            <div className="value">54</div>
+            <small>High: 14 | Medium: 20 | Normal: 20</small>
+          </div>
+
+          <div className="card">
+            <div>Est Cost</div>
+            <div className="value">₹4.5L</div>
+          </div>
+        </div>
+
+        {/* Charts Section */}
+        <div className="grid">
+          <div className="card">
+            <h4>Ticket Distribution</h4>
+            <div>📊 High / Medium / Normal</div>
+          </div>
+
+          <div className="card">
+            <h4>Cost Trend</h4>
+            <div>📈 Increasing maintenance cost</div>
+          </div>
+
+          <div className="card">
+            <h4>Downtime Trend</h4>
+            <div>⏱️ Peak in last 2 months</div>
+          </div>
+
+          <div className="card">
+            <h4>Failure Risk Index</h4>
+            <div>⚠️ 68% assets at medium/high risk</div>
+          </div>
+        </div>
+
+        {/* Asset Table */}
+        <div className="card" style={{margin:"20px"}}>
+          <h3>Asset Risk Table</h3>
+
+          <table className="table">
+            <thead>
+              <tr>
+                <th>Asset</th>
+                <th>Age</th>
+                <th>Downtime</th>
+                <th>Repair Cost</th>
+                <th>Risk</th>
+              </tr>
+            </thead>
+
+            <tbody>
+              {assets.map((a,i)=>{
+                let r = risk(a.age,a.downtime,a.cost);
+                return (
+                  <tr key={i}>
+                    <td>{a.name}</td>
+                    <td>{a.age}</td>
+                    <td>{a.downtime}</td>
+                    <td>₹{a.cost}</td>
+                    <td className={r.toLowerCase()}>{r}</td>
+                  </tr>
+                )
+              })}
+            </tbody>
+          </table>
+        </div>
+
+        {/* Activity Feed */}
+        <div className="card" style={{margin:"20px"}}>
+          <h3>Recent Activity</h3>
+          <div className="activity">
+            <p>🔧 Ticket #234 resolved</p>
+            <p>⚠️ Generator risk increased</p>
+            <p>📊 PMO report generated</p>
+            <p>🛠️ Maintenance scheduled</p>
+            <p>🚨 High priority issue detected</p>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById("root")).render(<App />);
+
+</script>
+
+</body>
+</html>
