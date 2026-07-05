@@ -174,10 +174,10 @@ http://localhost/Smart-Asset-Maintenance-and-Ticketing-System/
 
 ## 👩‍💻 Authors
 
-**Kalyani J**
+**Kalyani J**,
 **Pavithra Praveen**
 
-Integrated MCA Students
+Integrated MCA Students,
 Amrita Vishwa Vidyapeetham
 
 
